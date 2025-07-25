@@ -23,6 +23,7 @@
       --text: #000000;
       --button-bg: #000000;
       --button-text: #ffffff;
+      --meta-color: #555555;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -31,6 +32,7 @@
         --text: #ffffff;
         --button-bg: #ffffff;
         --button-text: #000000;
+        --meta-color: #aaaaaa;
       }
     }
 
@@ -41,31 +43,42 @@
       font-size: 1.5rem;
     }
 
-    .quote {
+    .content {
       flex: 1;
       display: flex;
       justify-content: center;
       align-items: center;
-      text-align: center;
       padding: 1rem;
+      text-align: center;
+    }
+
+    .quote {
+      max-width: 600px;
       font-size: 1.3rem;
-      line-height: 1.4;
+      line-height: 1.5;
       transform: translateY(-30%);
       opacity: 0;
       animation: fadeUp 0.4s forwards;
     }
 
-    .meta {
+    .book {
       margin-top: 1rem;
       font-size: 0.9rem;
-      opacity: 0.7;
+      font-style: italic;
+      color: var(--meta-color);
+    }
+
+    .tip {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--meta-color);
     }
 
     .button-container {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      padding: 1.5rem 0;
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
     }
 
     button {
@@ -90,17 +103,17 @@
       }
       to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(-60px);
       }
     }
 
     @media (min-width: 768px) {
-      .quote {
-        font-size: 1.8rem;
-      }
-
       header {
         font-size: 2rem;
+      }
+
+      .quote {
+        font-size: 1.8rem;
       }
 
       button {
@@ -111,18 +124,15 @@
 </head>
 <body>
   <header>UX-инсайты</header>
-  <div id="quote-container" class="quote"></div>
-  <div class="button-container">
-    <button onclick="showQuote()">Еще цитата</button>
+  <div class="content">
+    <div id="quote-container" class="quote"></div>
   </div>
-
-  <script>
-    const quotes = [
-      { text: "Не заставляйте пользователя думать.", book: "«Не заставляйте меня думать» — Стив Круг", tip: "Упрощайте интерфейс, чтобы пользователь мог быстро понять, что делать." },
-      { text: "Дизайн — это не только как что-то выглядит, но и как это работает.", book: "«Дизайн для реального мира» — Виктор Папанек", tip: "Думайте о функциональности и удобстве." },
-      { text: "Каждый элемент интерфейса должен иметь цель.", book: "«Дизайн привычных вещей» — Дон Норман", tip: "Удаляйте всё, что не служит цели пользователя." },
-      // Вставь сюда до 200 цитат!
-    ];
+  <div class="button-container">
+    <button>Еще инсайт</button>
+  </div>
+  <script type="module" src="./quotes.js" ></script>
+  <script type="module">
+    import {quotes} from "./quotes.js";
 
     let usedQuotes = [];
 
@@ -144,14 +154,17 @@
       container.innerHTML = `
         <div>
           <p>${quote.text}</p>
-          <div class="meta">${quote.book} — ${quote.tip}</div>
+          <div class="book">${quote.book}</div>
+          <div class="tip">${quote.tip}</div>
         </div>
       `;
-      container.style.animation = '';
       container.style.animation = 'fadeUp 0.4s forwards';
     }
 
     window.onload = showQuote;
+
+    const moreTipBtn = document.querySelector('.button-container button')
+    moreTipBtn.addEventListener('click', showQuote)
   </script>
 </body>
 </html>
