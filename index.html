@@ -2,202 +2,156 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>UX Insights</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UX-инсайты</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     html, body {
-      height: 100%;
       margin: 0;
+      padding: 0;
+      height: 100%;
       font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
       display: flex;
       flex-direction: column;
       transition: background 0.3s, color 0.3s;
     }
 
-    header {
-      text-align: center;
-      padding: 40px 20px 20px;
-      font-size: 2em;
-      font-weight: 600;
-      letter-spacing: -0.5px;
+    :root {
+      --bg: #ffffff;
+      --text: #000000;
+      --button-bg: #000000;
+      --button-text: #ffffff;
     }
 
-    #content {
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --text: #ffffff;
+        --button-bg: #ffffff;
+        --button-text: #000000;
+      }
+    }
+
+    header {
+      text-align: center;
+      padding: 2rem 1rem 1rem;
+      font-weight: 700;
+      font-size: 1.5rem;
+    }
+
+    .quote {
       flex: 1;
       display: flex;
       justify-content: center;
       align-items: center;
       text-align: center;
-      padding: 0 40px;
-    }
-
-    #quote {
-      max-width: 700px;
-      font-size: 1.5em;
+      padding: 1rem;
+      font-size: 1.3rem;
       line-height: 1.4;
       transform: translateY(-30%);
-      opacity: 1;
+      opacity: 0;
+      animation: fadeUp 0.4s forwards;
     }
 
-    /* Появление — всплытие снизу */
-    @keyframes fadeUpIn {
-      0% {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(-30%);
-      }
-    }
-
-    /* Исчезновение — опускание вниз */
-    @keyframes fadeDownOut {
-      0% {
-        opacity: 1;
-        transform: translateY(-30%);
-      }
-      100% {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-    }
-
-    .fadeUpEnter {
-      animation: fadeUpIn 0.3s forwards;
-    }
-
-    .fadeDownExit {
-      animation: fadeDownOut 0.3s forwards;
-    }
-
-    #quote p {
-      margin: 0 0 20px;
-    }
-
-    #quote em {
-      font-style: italic;
-      color: inherit;
+    .meta {
+      margin-top: 1rem;
+      font-size: 0.9rem;
       opacity: 0.7;
     }
 
-    #nextBtn {
-      position: fixed;
-      bottom: 40px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 16px 32px;
-      font-size: 1em;
-      font-weight: 600;
+    .button-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding: 1.5rem 0;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
       border: none;
-      border-radius: 999px;
+      border-radius: 9999px;
+      background: var(--button-bg);
+      color: var(--button-text);
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: background 0.3s, color 0.3s;
     }
 
-    body {
-      background: #f9f9f9;
-      color: #111;
+    button:hover {
+      opacity: 0.9;
     }
 
-    #nextBtn {
-      background: #111;
-      color: #fff;
-    }
-
-    #nextBtn:hover {
-      background: #333;
-      transform: translateX(-50%) scale(1.05);
-    }
-
-    @media (prefers-color-scheme: dark) {
-      body {
-        background: #111;
-        color: #eee;
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
       }
-      #nextBtn {
-        background: #eee;
-        color: #111;
-      }
-      #nextBtn:hover {
-        background: #ccc;
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
 
-    @media (max-width: 600px) {
+    @media (min-width: 768px) {
+      .quote {
+        font-size: 1.8rem;
+      }
+
       header {
-        font-size: 1.5em;
+        font-size: 2rem;
       }
-      #quote {
-        font-size: 1.2em;
-      }
-      #nextBtn {
-        padding: 14px 28px;
+
+      button {
+        font-size: 1.2rem;
       }
     }
   </style>
 </head>
 <body>
   <header>UX-инсайты</header>
-  <div id="content">
-    <div id="quote"></div>
+  <div id="quote-container" class="quote"></div>
+  <div class="button-container">
+    <button onclick="showQuote()">Еще цитата</button>
   </div>
-  <button id="nextBtn">Еще инсайт</button>
 
-  <script src="quotes.js"></script>
   <script>
-    let shown = [];
+    const quotes = [
+      { text: "Не заставляйте пользователя думать.", book: "«Не заставляйте меня думать» — Стив Круг", tip: "Упрощайте интерфейс, чтобы пользователь мог быстро понять, что делать." },
+      { text: "Дизайн — это не только как что-то выглядит, но и как это работает.", book: "«Дизайн для реального мира» — Виктор Папанек", tip: "Думайте о функциональности и удобстве." },
+      { text: "Каждый элемент интерфейса должен иметь цель.", book: "«Дизайн привычных вещей» — Дон Норман", tip: "Удаляйте всё, что не служит цели пользователя." },
+      // Вставь сюда до 200 цитат!
+    ];
 
-    const quoteEl = document.getElementById('quote');
-    const btn = document.getElementById('nextBtn');
+    let usedQuotes = [];
 
-    function getRandomQuote() {
-      if (shown.length === quotes.length) shown = [];
-      let q;
-      do {
-        q = quotes[Math.floor(Math.random() * quotes.length)];
-      } while (shown.includes(q) && shown.length < quotes.length);
-      shown.push(q);
-      return q;
-    }
+    function showQuote() {
+      const container = document.getElementById('quote-container');
+      container.style.animation = 'none';
+      void container.offsetWidth; // перезапуск анимации
 
-    function showQuote(quote) {
-      quoteEl.innerHTML = `
-        <p>«${quote.text}»</p>
-        <p><em>${quote.book}</em></p>
-        <p>${quote.tip}</p>
-      `;
-    }
-
-    let isAnimating = false;
-
-    function changeQuote() {
-      if (isAnimating) return;
-      isAnimating = true;
-
-      quoteEl.classList.remove('fadeUpEnter');
-      quoteEl.classList.add('fadeDownExit');
-    }
-
-    quoteEl.addEventListener('animationend', (e) => {
-      if (e.animationName === 'fadeDownOut') {
-        const quote = getRandomQuote();
-        showQuote(quote);
-
-        quoteEl.classList.remove('fadeDownExit');
-        quoteEl.classList.add('fadeUpEnter');
-      } else if (e.animationName === 'fadeUpIn') {
-        isAnimating = false;
+      if (usedQuotes.length === quotes.length) {
+        usedQuotes = [];
       }
-    });
 
-    btn.addEventListener('click', changeQuote);
+      let quote;
+      do {
+        quote = quotes[Math.floor(Math.random() * quotes.length)];
+      } while (usedQuotes.includes(quote));
+      usedQuotes.push(quote);
 
-    window.onload = () => {
-      const quote = getRandomQuote();
-      showQuote(quote);
-      quoteEl.classList.add('fadeUpEnter');
-    };
+      container.innerHTML = `
+        <div>
+          <p>${quote.text}</p>
+          <div class="meta">${quote.book} — ${quote.tip}</div>
+        </div>
+      `;
+      container.style.animation = '';
+      container.style.animation = 'fadeUp 0.4s forwards';
+    }
+
+    window.onload = showQuote;
   </script>
 </body>
 </html>
