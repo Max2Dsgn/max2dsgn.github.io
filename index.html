@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>UX Insights</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      flex-direction: column;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    header {
+      text-align: center;
+      padding: 40px 20px 20px;
+      font-size: 2em;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    #content {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 0 40px;
+    }
+
+    #quote {
+      max-width: 700px;
+      font-size: 1.5em;
+      line-height: 1.4;
+      transform: translateY(-30%);
+      opacity: 1;
+    }
+
+    /* Появление — всплытие снизу */
+    @keyframes fadeUpIn {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(-30%);
+      }
+    }
+
+    /* Исчезновение — опускание вниз */
+    @keyframes fadeDownOut {
+      0% {
+        opacity: 1;
+        transform: translateY(-30%);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+    }
+
+    .fadeUpEnter {
+      animation: fadeUpIn 0.3s forwards;
+    }
+
+    .fadeDownExit {
+      animation: fadeDownOut 0.3s forwards;
+    }
+
+    #quote p {
+      margin: 0 0 20px;
+    }
+
+    #quote em {
+      font-style: italic;
+      color: inherit;
+      opacity: 0.7;
+    }
+
+    #nextBtn {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 16px 32px;
+      font-size: 1em;
+      font-weight: 600;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    body {
+      background: #f9f9f9;
+      color: #111;
+    }
+
+    #nextBtn {
+      background: #111;
+      color: #fff;
+    }
+
+    #nextBtn:hover {
+      background: #333;
+      transform: translateX(-50%) scale(1.05);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #111;
+        color: #eee;
+      }
+      #nextBtn {
+        background: #eee;
+        color: #111;
+      }
+      #nextBtn:hover {
+        background: #ccc;
+      }
+    }
+
+    @media (max-width: 600px) {
+      header {
+        font-size: 1.5em;
+      }
+      #quote {
+        font-size: 1.2em;
+      }
+      #nextBtn {
+        padding: 14px 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>UX-инсайты</header>
+  <div id="content">
+    <div id="quote"></div>
+  </div>
+  <button id="nextBtn">Еще инсайт</button>
+
+  <script src="quotes.js"></script>
+  <script>
+    let shown = [];
+
+    const quoteEl = document.getElementById('quote');
+    const btn = document.getElementById('nextBtn');
+
+    function getRandomQuote() {
+      if (shown.length === quotes.length) shown = [];
+      let q;
+      do {
+        q = quotes[Math.floor(Math.random() * quotes.length)];
+      } while (shown.includes(q) && shown.length < quotes.length);
+      shown.push(q);
+      return q;
+    }
+
+    function showQuote(quote) {
+      quoteEl.innerHTML = `
+        <p>«${quote.text}»</p>
+        <p><em>${quote.book}</em></p>
+        <p>${quote.tip}</p>
+      `;
+    }
+
+    let isAnimating = false;
+
+    function changeQuote() {
+      if (isAnimating) return;
+      isAnimating = true;
+
+      quoteEl.classList.remove('fadeUpEnter');
+      quoteEl.classList.add('fadeDownExit');
+    }
+
+    quoteEl.addEventListener('animationend', (e) => {
+      if (e.animationName === 'fadeDownOut') {
+        const quote = getRandomQuote();
+        showQuote(quote);
+
+        quoteEl.classList.remove('fadeDownExit');
+        quoteEl.classList.add('fadeUpEnter');
+      } else if (e.animationName === 'fadeUpIn') {
+        isAnimating = false;
+      }
+    });
+
+    btn.addEventListener('click', changeQuote);
+
+    window.onload = () => {
+      const quote = getRandomQuote();
+      showQuote(quote);
+      quoteEl.classList.add('fadeUpEnter');
+    };
+  </script>
+</body>
+</html>
