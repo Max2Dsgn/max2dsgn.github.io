@@ -69,13 +69,13 @@ def call_openai(prompt, model="gpt-4o-mini", temperature=0.7, max_tokens=600):
     if not openai.api_key:
         return "Ошибка: отсутствует API-ключ OpenAI. Установите OPENAI_API_KEY в секретах."
     try:
-        resp = openai.ChatCompletion.create(
+        response = openai.completions.create(
             model=model,
-            messages=[{"role":"user","content": prompt}],
-            temperature=temperature,
-            max_tokens=max_tokens
+            prompt=prompt,
+            max_tokens=max_tokens,
+            temperature=temperature
         )
-        return resp.choices[0].message["content"].strip()
+        return response.choices[0].text.strip()
     except Exception as e:
         return f"Ошибка при вызове OpenAI API: {e}"
 
