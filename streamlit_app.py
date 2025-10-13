@@ -23,10 +23,18 @@ RSS_FEEDS = {
 
 # Ключевые слова для фильтрации релевантных новостей
 KEYWORDS = [
-    "технолог", "стартап", "дизайн", "UX", "UI", "интерфейс",
-    "искусственный интеллект", "AI", "машинное обучение", "инновац",
+    # Русские
+    "технолог", "стартап", "дизайн", "ux", "ui", "интерфейс",
+    "искусственный интеллект", "машинное обучение", "инновац",
     "продукт", "гаджет", "разработка", "программирование", "робот",
-    "тренд", "новинка", "IT", "технологии"
+    "тренд", "новинка", "it", "технологии", "цифров", "метавселенн",
+
+    # Английские
+    "technology", "tech", "startup", "innovation", "design", "ux", "ui",
+    "interface", "product", "ai", "machine learning", "artificial intelligence",
+    "app", "mobile", "software", "hardware", "gadget", "developer", "digital",
+    "trend", "cloud", "data", "robot", "automation", "saas", "launch", "productivity",
+    "future", "ui/ux", "user experience", "human-centered", "prototype", "creativity"
 ]
 
 # --- Функции ---
