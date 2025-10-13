@@ -1,150 +1,111 @@
-import streamlit as st
-import feedparser
 import openai
-import time
-import json
+import feedparser
 from datetime import datetime
+import streamlit as st
 
-st.set_page_config(page_title="Прогноз Будущего 🔮", page_icon="🔮", layout="centered")
-st.title("Прогноз Будущего 🔮")
-st.write("Короткие прогнозы на неделю, месяц и год — сгенерированные ИИ на основе свежих мировых и российских новостей. \
-Прототип: обновление вручную. Для продакшен-автоматизации — используйте cron/GitHub Actions.")
+# Настройки страницы
+st.set_page_config(page_title="AI FutureCast", page_icon="🔮", layout="centered")
 
-# --- Settings ---
+st.title("🔮 AI FutureCast: прогнозы для технологий и продуктового дизайна")
+st.write("Каждый день — новый прогноз технологических и дизайнерских трендов, созданный ИИ на основе актуальных мировых новостей.")
+
+# --- Конфигурация ---
+# RSS-источники с фокусом на технологии и инновации
 RSS_FEEDS = {
-    "BBC World": "https://feeds.bbci.co.uk/news/world/rss.xml",
-    "Reuters World": "http://feeds.reuters.com/Reuters/worldNews",
-    "TASS (ru)": "https://tass.com/rss/v2.xml",
-    "RBC (ru)": "https://www.rbc.ru/rbcnews.rss",
-    "RIA Novosti (ru)": "https://ria.ru/export/rss2/index.xml"
+    "TechCrunch": "https://techcrunch.com/feed/",
+    "The Verge": "https://www.theverge.com/rss/index.xml",
+    "Wired": "https://www.wired.com/feed/rss",
+    "ProductHunt": "https://www.producthunt.com/feed",
+    "VentureBeat": "https://venturebeat.com/feed/",
+    "РБК Технологии": "https://rssexport.rbc.ru/rbcnews/technology/20/full.rss",
+    "Хабр": "https://habr.com/ru/rss/all/all/",
 }
-MAX_HEADLINES = 12
-CONTEXT_TRIM_CHARS = 3000
 
-# --- OpenAI key ---
-if "OPENAI_API_KEY" not in st.secrets:
-    st.warning("Не найден OPENAI_API_KEY в секретах Streamlit. Добавьте его в Secrets.")
-openai.api_key = st.secrets.get("OPENAI_API_KEY", "")
+# Ключевые слова для фильтрации релевантных новостей
+KEYWORDS = [
+    "технолог", "стартап", "дизайн", "UX", "UI", "интерфейс",
+    "искусственный интеллект", "AI", "машинное обучение", "инновац",
+    "продукт", "гаджет", "разработка", "программирование", "робот",
+    "тренд", "новинка", "IT", "технологии"
+]
 
-# --- Utilities ---
-def fetch_headlines(feeds, max_total=12):
+# --- Функции ---
+
+def get_filtered_headlines():
+    """Получает и фильтрует новости из RSS по ключевым словам."""
     headlines = []
-    for name, url in feeds.items():
+    for source, url in RSS_FEEDS.items():
         try:
-            d = feedparser.parse(url)
-            for entry in d.entries[:3]:
-                title = entry.get("title", "")
-                summary = entry.get("summary", "")
-                headlines.append(f"{name}: {title} — {summary}")
-                if len(headlines) >= max_total:
-                    return headlines
+            feed = feedparser.parse(url)
+            for entry in feed.entries:
+                title = entry.title
+                if any(keyword.lower() in title.lower() for keyword in KEYWORDS):
+                    headlines.append(f"{title} ({source})")
         except Exception as e:
-            # ignore feed errors
-            continue
-    return headlines
+            st.warning(f"Ошибка при загрузке {source}: {e}")
+    return headlines[:20]  # ограничим до 20 заголовков
 
 def build_prompt(headlines):
+    """Создает контекстный промпт для модели."""
     now = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     joined = "\n".join([f"- {h}" for h in headlines])
-    if len(joined) > CONTEXT_TRIM_CHARS:
-        joined = joined[:CONTEXT_TRIM_CHARS] + "\n... (truncated)"
-    prompt = f"""
-Ты — экспертный аналитик. На основе приведённых ниже свежих новостей (смешанные мировые и российские источники)
-сформулируй лаконичные прогнозы в вежливой профессиональной форме на трёх горизонтах:
-1) На неделю — ключевые ожидаемые изменения и что стоит отслеживать.
-2) На месяц — вероятные тренды и возможные риски.
-3) На год — направление развития и крупные сдвиги, которые могут произойти.
+    if len(joined) > 2000:
+        joined = joined[:2000] + "\n... (truncated)"
+    return f"""
+Ты — эксперт в области технологий и продуктового дизайна.
+Используй приведённые ниже свежие новости (мировые и российские источники)
+и создай прогнозы в технологическом и дизайнерском контексте.
 
-Ограничься примерно 3–5 предложениями на каждый горизонт. Выдели вероятность (низкая/средняя/высокая) у каждого пункта в скобках.
-Добавь в конце 1–2 кратких рекомендаций для продуктового дизайнера.
+Формат ответа:
+1️⃣ Прогноз на неделю — краткосрочные технологические и дизайнерские тренды, новые идеи и тенденции.
+2️⃣ Прогноз на месяц — куда движутся технологии, продукты и дизайн-индустрия.
+3️⃣ Прогноз на год — крупные изменения, тренды и инновации, которые могут повлиять на продуктовых дизайнеров и технологические компании.
 
-Контекст (новости собраны по %s):
-%s
+Дай также короткие рекомендации для дизайнеров и продуктовых специалистов, чтобы они могли адаптироваться к этим изменениям.
+
+Новости (актуально на {now}):
+{joined}
 
 Ответ дай на русском языке.
-""" % (now, joined)
-    return prompt
+"""
 
-def call_openai(prompt, model="gpt-4o-mini", temperature=0.7, max_tokens=600):
-    if not openai.api_key:
-        return "Ошибка: отсутствует API-ключ OpenAI. Установите OPENAI_API_KEY в секретах."
+def call_openai(prompt):
+    """Отправляет запрос в OpenAI API и возвращает ответ."""
+    openai.api_key = st.secrets["OPENAI_API_KEY"]
     try:
         response = openai.completions.create(
-            model=model,
+            model="gpt-4o-mini",
             prompt=prompt,
-            max_tokens=max_tokens,
-            temperature=temperature
+            max_tokens=800,
+            temperature=0.7,
         )
         return response.choices[0].text.strip()
     except Exception as e:
         return f"Ошибка при вызове OpenAI API: {e}"
 
-# --- UI ---
-st.sidebar.header("Настройки (прототип)")
-st.sidebar.write("Можно менять число заголовков и модель (если у вас доступ)")
-max_items = st.sidebar.slider("Макс. заголовков из RSS", 5, 30, MAX_HEADLINES)
-model = st.sidebar.text_input("Модель (OpenAI)", value="gpt-4o-mini")
-temp = st.sidebar.slider("Температура ИИ", 0.0, 1.0, 0.7)
+# --- Интерфейс приложения ---
 
-st.markdown("---")
-st.subheader("Источник новостей")
-st.write("Собираются топ-заголовки из выбранных RSS-лент (мировые + российские).")
+st.divider()
+st.write("🔍 Сбор данных из технологических новостных источников...")
 
-col1, col2 = st.columns([3,1])
-with col1:
-    if st.button("Обновить прогноз (ИИ)"):
-        with st.spinner("Собираем новости..."):
-            headlines = fetch_headlines(RSS_FEEDS, max_total=max_items)
-            if not headlines:
-                st.error("Не удалось получить заголовки из RSS. Проверьте доступ к сети или RSS-ленты.")
-            else:
-                st.info(f"Собрано {len(headlines)} заголовков. Формируем промпт и обращаемся к OpenAI...")
-                prompt = build_prompt(headlines)
-                forecast = call_openai(prompt, model=model, temperature=float(temp))
-                # save to local file (append)
-                record = {
-                    "time": datetime.utcnow().isoformat(),
-                    "model": model,
-                    "temperature": temp,
-                    "headlines": headlines,
-                    "forecast": forecast
-                }
-                try:
-                    # append to history file
-                    history_path = "data/forecasts_history.json"
-                    try:
-                        with open(history_path, "r", encoding="utf-8") as f:
-                            hist = json.load(f)
-                    except:
-                        hist = []
-                    hist.insert(0, record)
-                    with open(history_path, "w", encoding='utf-8') as f:
-                        json.dump(hist[:200], f, ensure_ascii=False, indent=2)
-                except Exception as e:
-                    st.error(f"Не удалось сохранить историю: {e}")
-                st.subheader("🔮 Сгенерированный прогноз")
-                st.markdown(f"```\n{forecast}\n```")
-    else:
-        st.write("Нажмите кнопку **Обновить прогноз (ИИ)** чтобы получить свежий прогноз.")
+headlines = get_filtered_headlines()
 
-with col2:
-    st.write("История (последние прогнозы)")
-    try:
-        with open("data/forecasts_history.json", "r", encoding='utf-8') as f:
-            hist = json.load(f)
-        for r in hist[:5]:
-            t = r.get("time","?")
-            st.write(f"- {t} — {r.get('model','?')}")
-    except Exception:
-        st.write("История пуста.")
+if not headlines:
+    st.error("Не удалось получить релевантные новости. Попробуй позже.")
+else:
+    st.success(f"Получено {len(headlines)} новостей.")
+    with st.expander("Показать новости, по которым строится прогноз"):
+        for h in headlines:
+            st.write("•", h)
 
-st.markdown("---")
-st.subheader("Как это работает (коротко)")
-st.write("""
-1. Сбор новостей из RSS (несколько источников).  
-2. Конструирование промпта и отправка в OpenAI.  
-3. Публикация краткого прогноза и сохранение в истории.  
-Это прототип — не даёт гарантий и не проверяет точность автоматически.
-""")
+    if st.button("✨ Сгенерировать прогноз"):
+        with st.spinner("ИИ анализирует тренды и формирует прогноз..."):
+            prompt = build_prompt(headlines)
+            forecast = call_openai(prompt)
+            st.divider()
+            st.subheader("📊 Прогноз")
+            st.write(forecast)
+            st.caption(f"Обновлено {datetime.now().strftime('%Y-%m-%d %H:%M')}")
 
-st.caption("Прототип создан для демонстрации идеи. Не используйте прогнозы как единственный источник решений.")
+st.divider()
+st.caption("AI FutureCast © 2025 — прогнозы для продуктовых дизайнеров и технологов.")
