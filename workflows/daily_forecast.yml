@@ -1,0 +1,87 @@
+name: 🕓 Daily AI Forecast
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # каждый день в 06:00 UTC
+  workflow_dispatch:       # запуск вручную
+jobs:
+  update_forecast:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧩 Клонируем репозиторий
+        uses: actions/checkout@v4
+
+      - name: 🐍 Устанавливаем Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: 📦 Устанавливаем зависимости
+        run: |
+          pip install -r requirements.txt
+
+      - name: ⚙️ Запускаем обновление прогноза
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python - <<'PYCODE'
+import os, feedparser, json, datetime, openai
+
+# --- Мини-версия обновления ---
+openai.api_key = os.getenv("OPENAI_API_KEY")
+RSS = [
+  "https://techcrunch.com/feed/",
+  "https://www.theverge.com/rss/index.xml",
+  "https://www.wired.com/feed/rss",
+  "https://www.producthunt.com/feed",
+  "https://rssexport.rbc.ru/rbcnews/technology/20/full.rss",
+  "https://habr.com/ru/rss/all/all/",
+]
+
+KEYWORDS = ["tech", "technology", "startup", "innovation", "design", "ai", "machine learning",
+            "ux", "ui", "продукт", "технолог", "инновац", "дизайн", "цифров", "робот"]
+
+headlines = []
+for url in RSS:
+    feed = feedparser.parse(url)
+    for entry in feed.entries:
+        title = entry.title
+        if any(k.lower() in title.lower() for k in KEYWORDS):
+            headlines.append(title)
+headlines = headlines[:20]
+
+joined = "\n".join([f"- {h}" for h in headlines])
+prompt = f"""Ты — эксперт в технологиях и дизайне. Используя новости:
+{joined}
+Дай краткий прогноз на неделю, месяц и год для технологических и продуктовых трендов (на русском языке)."""
+
+response = openai.completions.create(
+    model="gpt-4o-mini",
+    prompt=prompt,
+    max_tokens=700,
+    temperature=0.7,
+)
+forecast = response.choices[0].text.strip()
+
+os.makedirs("data", exist_ok=True)
+history_path = "data/forecasts_history.json"
+today = datetime.date.today().isoformat()
+if os.path.exists(history_path):
+    with open(history_path, "r") as f:
+        history = json.load(f)
+else:
+    history = []
+history.insert(0, {"date": today, "forecast": forecast})
+history = history[:7]
+with open(history_path, "w") as f:
+    json.dump(history, f, ensure_ascii=False, indent=2)
+PYCODE
+
+      - name: 💾 Коммитим изменения
+        run: |
+          git config --global user.name "ForecastBot"
+          git config --global user.email "forecastbot@users.noreply.github.com"
+          git add data/forecasts_history.json || true
+          git commit -m "🤖 Daily forecast update" || echo "No changes"
+          git push
