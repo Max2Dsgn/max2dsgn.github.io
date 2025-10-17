@@ -46,20 +46,12 @@ jobs:
           echo "=== git config ==="
           git config --list || true
 
-      - name: 💾 Commit and push changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Optional: set origin to use token auth explicitly (надёжность)
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} || true
-
-          git add data/forecasts_history.json || true
-
-          # Если нет изменений, commit вернёт non-zero; поэтому используем || true
-          git commit -m "🤖 Daily forecast update" || echo "No changes to commit"
-
-          # push в текущую ветку (обычно main)
-          git push origin HEAD:${{ github.ref_name }} || (
-            echo "Push failed. Attempting to push to main instead."
-            git push origin HEAD:main || (echo "Push still failed"; exit 1)
-          )
+      - name: Commit and push changes
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  run: |
+    git config --global user.email "bot@forecast.ai"
+    git config --global user.name "AI Forecaster Bot"
+    git add data/forecasts_history.json
+    git commit -m "🤖 Auto-update forecast $(date +'%Y-%m-%d')" || echo "No changes to commit"
+    git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:main
