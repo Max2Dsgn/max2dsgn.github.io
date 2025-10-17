@@ -47,11 +47,11 @@ jobs:
           git config --list || true
 
       - name: Commit and push changes
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  run: |
-    git config --global user.email "bot@forecast.ai"
-    git config --global user.name "AI Forecaster Bot"
-    git add data/forecasts_history.json
-    git commit -m "🤖 Auto-update forecast $(date +'%Y-%m-%d')" || echo "No changes to commit"
-    git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.email "bot@forecast.ai"
+          git config --global user.name "AI Forecaster Bot"
+          git add data/forecasts_history.json
+          git commit -m "🤖 Auto-update forecast $(date +'%Y-%m-%d')" || echo "No changes to commit"
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:main
