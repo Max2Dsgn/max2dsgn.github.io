@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор значимости задач</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #000000 0%, #1a1a2e 100%);
+            color: #ffffff;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 32px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #ff6b6b, #ffa502);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+            font-weight: 400;
+        }
+        
+        .calculator-container {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 28px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 16px;
+            font-weight: 600;
+            font-size: 18px;
+            color: #ffffff;
+        }
+        
+        .radio-group {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .radio-option:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .radio-option input {
+            width: 20px;
+            height: 20px;
+            accent-color: #ff6b6b;
+            cursor: pointer;
+        }
+        
+        .radio-option div strong {
+            display: block;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #ffffff;
+        }
+        
+        .radio-option div small {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 400;
+        }
+        
+        .result-section {
+            text-align: center;
+            padding: 32px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .result-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .result-value {
+            font-size: 48px;
+            font-weight: 800;
+            margin: 20px 0;
+            background: linear-gradient(90deg, #ff6b6b, #ffa502);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .significance-badge {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .significance-low { 
+            background: linear-gradient(90deg, #5cdb95, #05386b); 
+            color: white;
+        }
+        .significance-medium { 
+            background: linear-gradient(90deg, #ffd166, #ef9d48); 
+            color: black;
+        }
+        .significance-high { 
+            background: linear-gradient(90deg, #ff9a8b, #ff6b6b); 
+            color: white;
+        }
+        .significance-critical { 
+            background: linear-gradient(90deg, #ff416c, #ff4b2b); 
+            color: white;
+        }
+        
+        .quality-indicator {
+            font-size: 16px;
+            margin: 20px 0;
+            padding: 16px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .copy-btn {
+            background: linear-gradient(90deg, #ff6b6b, #ffa502);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+        }
+        
+        .copy-btn.copied {
+            background: linear-gradient(90deg, #5cdb95, #05386b);
+        }
+        
+        .formula {
+            text-align: center;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 24px;
+            padding: 16px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .calculator-container,
+            .result-section {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .result-value {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Калькулятор значимости задач</h1>
+            <div class="subtitle">Определите важность задач по методике «А, Чё, Во»</div>
+        </header>
+        
+        <main>
+            <div class="calculator-container">
+                <!-- Параметр: Аудитория -->
+                <div class="form-group">
+                    <label>👥 Аудитория</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="audience" value="1" checked>
+                            <div>
+                                <strong>1 — Внутренняя/узкая внешняя</strong>
+                                <small>меньше 1000 человек</small>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="audience" value="2">
+                            <div>
+                                <strong>2 — Дизайнеры/небольшая внешняя</strong>
+                                <small>1000—200К человек</small>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="audience" value="3">
+                            <div>
+                                <strong>3 — Топ-менеджеры/широкая внешняя</strong>
+                                <small>больше 200K человек</small>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Параметр: Частота -->
+                <div class="form-group">
+                    <label>🔁 Частота</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="frequency" value="1" checked>
+                            <div>
+                                <strong>1 — Редко</strong>
+                                <small>Результат будут видеть раз в месяц или реже</small>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="frequency" value="2">
+                            <div>
+                                <strong>2 — Умеренно</strong>
+                                <small>Несколько раз в месяц/неделю</small>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="frequency" value="3">
+                            <div>
+                                <strong>3 — Постоянно</strong>
+                                <small>Ежедневно</small>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Параметр: Влияние -->
+                <div class="form-group">
+                    <label>📈 Влияние</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="impact" value="1" checked>
+                            <div>
+                                <strong>1 — Нет влияния</strong>
+                                <small>Сложно оценить влияние на бизнес</small>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="impact" value="2">
+                            <div>
+                                <strong>2 — Среднее</strong>
+                                <small>Умеренное влияние</small>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="impact" value="3">
+                            <div>
+                                <strong>3 — Высокое</strong>
+                                <small>Значительное влияние на бренд и бизнес</small>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Результат -->
+            <div class="result-section">
+                <div class="result-title">РЕЗУЛЬТАТ РАСЧЕТА</div>
+                <div class="result-value" id="weightResult">0</div>
+                
+                <div class="significance-badge significance-low" id="significanceBadge">
+                    Низкая значимость
+                </div>
+                
+                <div class="quality-indicator" id="qualityIndicator">
+                    Уровень погруженности: минимальный. Переиспользование готового контента, ИИ-генерация, шаблоны
+                </div>
+                
+                <button class="copy-btn" id="copyBtn">📋 Копировать результат</button>
+                
+                <div class="formula">
+                    Формула: Вес = Аудитория × Частота × Влияние
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        // Получаем все элементы формы (без типа задачи)
+        const formElements = document.querySelectorAll('input[name="audience"], input[name="frequency"], input[name="impact"]');
+        const weightResult = document.getElementById('weightResult');
+        const significanceBadge = document.getElementById('significanceBadge');
+        const qualityIndicator = document.getElementById('qualityIndicator');
+        const copyBtn = document.getElementById('copyBtn');
+        
+        // Функция для расчета веса задачи (без типа задачи)
+        function calculateWeight() {
+            // Получаем значения всех параметров
+            const audience = parseFloat(document.querySelector('input[name="audience"]:checked').value);
+            const frequency = parseFloat(document.querySelector('input[name="frequency"]:checked').value);
+            const impact = parseFloat(document.querySelector('input[name="impact"]:checked').value);
+            
+            // Рассчитываем вес по формуле (без типа задачи)
+            const weight = audience * frequency * impact;
+            
+            // Обновляем отображение веса
+            weightResult.textContent = weight.toFixed(1);
+            
+            // Определяем значимость и обновляем стиль бейджа
+            updateSignificanceDisplay(weight);
+        }
+        
+        // Функция для определения значимости и обновления отображения
+        function updateSignificanceDisplay(weight) {
+            let significanceText = '';
+            let qualityText = '';
+            let significanceClass = '';
+            
+            if (weight >= 1 && weight <= 3) {
+                significanceText = 'Низкая значимость';
+                qualityText = 'Уровень погруженности: минимальный. Переиспользование готового контента, ИИ-генерация, шаблоны';
+                significanceClass = 'significance-low';
+            } else if (weight >= 4 && weight <= 9) {
+                significanceText = 'Средняя значимость';
+                qualityText = 'Уровень погруженности: стандартный. Уникальный контент базового качества, подрядчики';
+                significanceClass = 'significance-medium';
+            } else if (weight >= 10 && weight <= 18) {
+                significanceText = 'Высокая значимость';
+                qualityText = 'Уровень погруженности: высокий. Уникальный сложный контент, топовое качество';
+                significanceClass = 'significance-high';
+            } else if (weight >= 19 && weight <= 27) {
+                significanceText = 'Критическая значимость';
+                qualityText = 'Уровень погруженности: максимальный. Уникальный сложный контент, вау-эффект, креативные решения';
+                significanceClass = 'significance-critical';
+            } else {
+                significanceText = 'Космическая значимость';
+                qualityText = 'Свистать всех наверх!';
+                significanceClass = 'significance-low';
+            }
+            
+            // Обновляем текст и класс бейджа
+            significanceBadge.textContent = significanceText;
+            significanceBadge.className = 'significance-badge ' + significanceClass;
+            
+            // Обновляем индикатор качества
+            qualityIndicator.textContent = qualityText;
+        }
+        
+        // Функция для копирования результата
+        function copyResult() {
+            const weight = weightResult.textContent;
+            const significance = significanceBadge.textContent;
+            const quality = qualityIndicator.textContent;
+            
+            const resultText = `Вес задачи: ${weight}\nЗначимость: ${significance}\n${quality}`;
+            
+            navigator.clipboard.writeText(resultText).then(() => {
+                // Меняем текст кнопки на "Скопировано!" на 2 секунды
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = '✅ СКОПИРОВАНО!';
+                copyBtn.classList.add('copied');
+                
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Ошибка копирования: ', err);
+            });
+        }
+        
+        // Добавляем обработчики событий для всех элементов формы
+        formElements.forEach(element => {
+            element.addEventListener('change', calculateWeight);
+        });
+        
+        // Добавляем обработчик события для кнопки копирования
+        copyBtn.addEventListener('click', copyResult);
+        
+        // Инициализируем расчет при загрузке страницы
+        calculateWeight();
+    </script>
+</body>
+</html>
